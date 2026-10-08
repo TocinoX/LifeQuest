@@ -319,11 +319,25 @@ const STATS = [
 ];
 const DEFAULT_PACTS = [
 	{ id: 1, act: "🛏️ Tender la cama", rew: "🍳 Desayunar", stat: "VOL" },
-	{ id: 2, act: "👟 Pista 12 min", rew: "🚿 Ducha caliente + tu música", stat: "VIT" },
-	{ id: 3, act: "📚 Estudiar 45 min", rew: "🍿 Un capítulo de tu serie", stat: "INT" },
-	{ id: 4, act: "🌙 Cerrar la PC a la hora", rew: "🍵 Té + tu canción de calma", stat: "VOL" },
-	{ id: 5, act: "🏋️ Pesas 15 min", rew: "🥤 Tu batido o fruta favorita", stat: "FUE" },
-	{ id: 6, act: "🚪 Salir 10 min afuera", rew: "🎮 30 min de juego sin culpa", stat: "CAR" }
+	{ id: 2, act: "🌙 Cerrar la PC a la hora", rew: "🍵 Té + tu canción de calma", stat: "VOL" },
+	{ id: 3, act: "🚪 Salir de casa", rew: "🎵 Música + descanso", stat: "CAR" },
+	{ id: 4, act: "💼 Hacer algo para conseguir trabajo o ingresos", rew: "🎮 30 min de juego sin culpa", stat: "VOL" },
+	{ id: 5, act: "💻 Estudiar Ciberseguridad", rew: "🎮 30 min de juego", stat: "INT" },
+	{ id: 6, act: "📚 Estudiar Generales", rew: "🍿 Un capítulo de tu serie", stat: "INT" },
+	{ id: 7, act: "🎓 Avanzar Cursos Online", rew: "🎵 Música + descanso", stat: "INT" },
+	{ id: 8, act: "📖 Leer literatura", rew: "☕ Algo rico para tomar", stat: "INT" },
+	{ id: 9, act: "🧠 Leer y resumir aprendizaje", rew: "🎮 30 min de juego", stat: "INT" },
+	{ id: 10, act: "🤸 Entrenar calistenia", rew: "🚿 Ducha caliente + tu música", stat: "FUE" },
+	{ id: 11, act: "🏋️ Entrenar con pesas", rew: "🥤 Tu batido o fruta favorita", stat: "FUE" },
+	{ id: 12, act: "🥋 Entrenar artes marciales", rew: "🎮 30 min de juego", stat: "AGI" },
+	{ id: 13, act: "🏃 Salir a correr", rew: "🚿 Ducha + descanso", stat: "VIT" },
+	{ id: 14, act: "🧘 Hacer ejercicios de recuperación y movilidad", rew: "🎵 Música + descanso", stat: "DES" },
+	{ id: 15, act: "💻 Trabajar en un proyecto de Software", rew: "🎮 30 min de juego", stat: "INT" },
+	{ id: 16, act: "🎮 Trabajar en un proyecto de Videojuegos", rew: "🎵 Música + descanso", stat: "INT" },
+	{ id: 17, act: "💰 Trabajar en un proyecto de Negocio o Monetización", rew: "🍿 Un capítulo de tu serie", stat: "VOL" },
+	{ id: 18, act: "🔧 Trabajar en un proyecto de Tecnología o Hardware", rew: "🎮 30 min de ocio", stat: "INT" },
+	{ id: 19, act: "🔬 Trabajar en un proyecto de Investigación", rew: "☕ Algo que te guste", stat: "INT" },
+	{ id: 20, act: "🧹 Ordenar y mantener mi espacio", rew: "🍿 Un capítulo de tu serie", stat: "VOL" }
 ];
 
 // ============ Estado y guardado ============
@@ -340,6 +354,7 @@ function freshState() {
 				sos: [hab("🔞 FAP", "Quiero energía, foco y control", ["Agua fría en la cara", "Salir del cuarto", "20 sentadillas", "Escribir qué siento"])] }
 		} };
 }
+
 // Normaliza un estado cargado (de localStorage, IndexedDB o respaldo)
 function normalize(o) {
 	const base = freshState(), s = Object.assign(base, o);
@@ -391,6 +406,7 @@ async function externalSave(obj) {
 async function initStorage() {
 	try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
 	const o = await externalLoad();
+	console.log(o);
 	if (!o) return externalSave(state);
 	if ((o.t || 0) > (state.t || 0)) { state = normalize(o); applySkin(state.skin); renderAll(); toast("📲 Datos recuperados"); }
 }
