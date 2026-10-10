@@ -232,6 +232,31 @@ details { margin-top:8px; } summary { cursor:pointer; color:var(--muted); font-w
 .shk main { animation:shk .4s; }
 @media (prefers-reduced-motion: reduce) { *, ::before, ::after { animation:none !important; transition:none !important; } }
 
+
+/* Ajustes de separación y misiones */
+.pact { margin-block: 6px; }
+#shopItems { gap: 12px; }
+#shopItems .pact { margin-block: 6px; }
+.mission-filters { display:flex; flex-wrap:wrap; gap:7px; margin:8px 0 12px; }
+.mission-filters button { padding:7px 11px; border:1px solid var(--border); border-radius:999px; background:var(--card); color:var(--text); font-size:.78rem; }
+.mission-filters button.on { background:var(--lime); color:#111; border-color:var(--lime); }
+#tab-tienda .tile { margin-block: 8px; }
+#tab-tienda .bento { row-gap: 16px; }
+@media (max-width:699px) {
+  /* En Hoy, el contenedor principal pasa a una columna. Las misiones usan
+     display:contents para participar directamente en esta cuadrícula; no
+     convertir #pacts en otra cuadrícula estrecha dentro de una sola celda. */
+  #tab-hoy .bento { grid-template-columns:minmax(0,1fr); gap:12px; }
+  #tab-hoy .bento > .span2,
+  #tab-hoy .bento > .hud,
+  #tab-hoy #missionFilters { grid-column:1 / -1; min-width:0; }
+  #tab-hoy #pacts { display:contents; }
+  #tab-hoy #pacts > .pact { grid-column:1 / -1; width:100%; min-width:0; margin:0; }
+  #tab-hoy .tile, #tab-hoy .pact { min-width:0; overflow-wrap:anywhere; }
+  #tab-hoy .mission-filters { gap:6px; }
+  #tab-hoy .mission-filters button { max-width:100%; white-space:normal; }
+}
+
 /* ===== Pantallas ===== */
 @media (max-width:420px) {
 	main { padding:10px 10px calc(110px + env(safe-area-inset-bottom,0px)); }
@@ -259,18 +284,43 @@ details { margin-top:8px; } summary { cursor:pointer; color:var(--muted); font-w
 		<section class="tile span2" id="gold"></section>
 		<section class="tile span2"><h2>Progreso de hoy</h2><div class="bar"><i id="dayBar"></i></div><small id="dayTxt"></small></section>
 		<section class="tile span2"><h2>Atributos</h2><div class="chips" id="chips"></div></section>
-		<div id="pacts" class="pacts"></div>
+		<div class="span2"><div id="missionFilters" class="mission-filters" aria-label="Filtrar misiones"></div></div><div id="pacts" class="pacts"></div>
 	</div></div>
 	<div class="tab" id="tab-pactos"><div class="bento">
 		<section class="tile span2">
 			<h2>Nueva misión: “Cuando hago… gano…”</h2>
 			<input type="text" id="nAct" placeholder="Misión (ej: tender la cama)" style="margin-bottom:8px">
-			<input type="text" id="nRew" placeholder="Botín real (ej: desayuno)" style="margin-bottom:8px">
+			<input type="text" id="nRew" placeholder="Recompensa relacionada (opcional)" style="margin-bottom:8px"><input type="text" id="nCriteria" placeholder="Criterio concreto (ej. estudiar 25 min)" style="margin-bottom:8px"><label for="nCategory">Categoría de la misión</label><select id="nCategory" style="margin-bottom:10px"><option>Hogar</option><option>Salud</option><option>Trabajo</option><option>Estudio</option><option>Desarrollo personal</option><option>Otros</option></select><div class="btns"><input type="number" id="nMax" min="1" max="10" value="1" placeholder="Veces/día"><input type="number" id="nCredits" min="1" value="10" placeholder="Créditos"></div>
 			<label>Atributo principal (100% del XP) y secundario (50%, opcional)</label>
 			<div class="btns" style="margin-bottom:8px"><select id="nStat"></select><select id="nStat2"></select></div>
 			<button id="nAdd" class="big" style="animation:none">➕ Crear misión</button>
 		</section>
 		<div id="plist" class="plist"></div>
+	</div></div>
+	<div class="tab" id="tab-tienda"><div class="bento">
+		<section class="tile span2">
+			<h2>🛍️ Tienda de recompensas</h2>
+			<div class="sechead"><span>Créditos disponibles</span><b id="creditBalance">0 ◈</b></div>
+			<p><small>Gana créditos completando misiones y cámbialos por recompensas. Son distintos del Oro.</small></p>
+			<div id="shopItems" class="pacts"></div>
+		</section>
+		<section class="tile span2">
+			<h2>➕ Crear recompensa</h2>
+			<input id="rName" type="text" placeholder="Nombre (ej. 30 min de videojuegos)" style="margin-bottom:8px">
+			<div class="btns">
+				<input id="rIcon" type="text" placeholder="Emoji (ej. 🎮)" value="🎁">
+				<input id="rPrice" type="number" min="1" value="20" placeholder="Precio en créditos">
+			</div>
+			<div class="btns" style="margin-top:8px">
+				<label>Máx. compras al día <input id="rMax" type="number" min="1" max="10" value="1"></label>
+				<label>Caduca en horas <input id="rExpiry" type="number" min="1" max="24" value="24"></label>
+			</div>
+			<button id="rAdd" class="big" style="animation:none;margin-top:8px">Crear recompensa</button>
+		</section>
+		<section class="tile span2">
+			<h2>🎁 Mis recompensas compradas</h2>
+			<div id="inventory"></div>
+		</section>
 	</div></div>
 	<div class="tab" id="tab-tareas"><div class="bento">
 		<section class="tile span2">
@@ -288,7 +338,7 @@ details { margin-top:8px; } summary { cursor:pointer; color:var(--muted); font-w
 <nav>
 	<button id="n-hoy" class="on">🏠<small>Hoy</small></button>
 	<button id="n-pactos">🎯<small>Misiones</small></button>
-	<button id="n-tareas">✅<small>Tareas</small></button>
+	<button id="n-tienda">🛍️<small>Tienda</small></button><button id="n-tareas">✅<small>Tareas</small></button>
 	<button id="n-stats">📊<small>Stats</small></button>
 	<button id="n-calma">🧘<small>Calma</small></button>
 </nav>
@@ -324,26 +374,38 @@ const STATS = [
 	{ id: "CAR", icon: "🗣️", name: "Carisma", desc: "Soltura para relacionarte, expresarte y estar con otras personas.", how: "salir, conversar, exponerte poco a poco a situaciones sociales." }
 ];
 const DEFAULT_PACTS = [
-	{ id: 1, act: "🛏️ Tender la cama", rew: "🍳 Desayunar", stat: "VOL" },
-	{ id: 2, act: "🌙 Cerrar la PC a la hora", rew: "🍵 Té + tu canción de calma", stat: "VOL" },
-	{ id: 3, act: "🚪 Salir de casa", rew: "🎵 Música + descanso", stat: "CAR" },
-	{ id: 4, act: "💼 Hacer algo para conseguir trabajo o ingresos", rew: "🎮 30 min de juego sin culpa", stat: "VOL" },
-	{ id: 5, act: "💻 Estudiar Ciberseguridad", rew: "🎮 30 min de juego", stat: "INT" },
-	{ id: 6, act: "📚 Estudiar Generales", rew: "🍿 Un capítulo de tu serie", stat: "INT" },
-	{ id: 7, act: "🎓 Avanzar Cursos Online", rew: "🎵 Música + descanso", stat: "INT" },
-	{ id: 8, act: "📖 Leer literatura", rew: "☕ Algo rico para tomar", stat: "INT" },
-	{ id: 9, act: "🧠 Leer y resumir aprendizaje", rew: "🎮 30 min de juego", stat: "INT" },
-	{ id: 10, act: "🤸 Entrenar calistenia", rew: "🚿 Ducha caliente + tu música", stat: "FUE" },
-	{ id: 11, act: "🏋️ Entrenar con pesas", rew: "🥤 Tu batido o fruta favorita", stat: "FUE" },
-	{ id: 12, act: "🥋 Entrenar artes marciales", rew: "🎮 30 min de juego", stat: "AGI" },
-	{ id: 13, act: "🏃 Salir a correr", rew: "🚿 Ducha + descanso", stat: "VIT" },
-	{ id: 14, act: "🧘 Hacer ejercicios de recuperación y movilidad", rew: "🎵 Música + descanso", stat: "DES" },
-	{ id: 15, act: "💻 Trabajar en un proyecto de Software", rew: "🎮 30 min de juego", stat: "INT" },
-	{ id: 16, act: "🎮 Trabajar en un proyecto de Videojuegos", rew: "🎵 Música + descanso", stat: "INT" },
-	{ id: 17, act: "💰 Trabajar en un proyecto de Negocio o Monetización", rew: "🍿 Un capítulo de tu serie", stat: "VOL" },
-	{ id: 18, act: "🔧 Trabajar en un proyecto de Tecnología o Hardware", rew: "🎮 30 min de ocio", stat: "INT" },
-	{ id: 19, act: "🔬 Trabajar en un proyecto de Investigación", rew: "☕ Algo que te guste", stat: "INT" },
-	{ id: 20, act: "🧹 Ordenar y mantener mi espacio", rew: "🍿 Un capítulo de tu serie", stat: "VOL" }
+{id:1,act:"🛏️ Tender la cama",criteria:"Deja la cama arreglada al levantarte.",rew:"",stat:"VOL",maxDay:1,credits:8},
+{id:2,act:"🌙 Rutina de sueño",criteria:"Empieza tu rutina nocturna a la hora elegida.",rew:"",stat:"VOL",maxDay:1,credits:10},
+{id:3,act:"🚶 Salir o caminar",criteria:"Camina al aire libre durante 10 minutos.",rew:"",stat:"VIT",maxDay:1,credits:8},
+{id:4,act:"💼 Avanzar trabajo",criteria:"Dedica 25 minutos a una acción laboral concreta.",rew:"",stat:"VOL",maxDay:2,credits:12},
+{id:5,act:"🛡️ Estudiar ciberseguridad",criteria:"Estudia o practica durante 25 minutos.",rew:"",stat:"INT",maxDay:2,credits:12},
+{id:6,act:"📚 Estudiar generales",criteria:"Completa 25 minutos y anota qué avanzaste.",rew:"",stat:"INT",maxDay:2,credits:12},
+{id:7,act:"🎓 Avanzar curso online",criteria:"Completa una lección o 25 minutos de curso.",rew:"",stat:"INT",maxDay:2,credits:12},
+{id:8,act:"📖 Leer literatura",criteria:"Lee durante 15 minutos o termina una sección.",rew:"",stat:"INT",maxDay:1,credits:8},
+{id:9,act:"📝 Resumir aprendizaje",criteria:"Escribe 3 ideas clave de algo aprendido.",rew:"",stat:"INT",maxDay:1,credits:8},
+{id:10,act:"🤸 Entrenar calistenia",criteria:"Completa tu sesión planificada, adaptada a tu nivel.",rew:"",stat:"FUE",maxDay:1,credits:12},
+{id:11,act:"🏋️ Entrenar con pesas",criteria:"Completa tu rutina planificada con técnica segura.",rew:"",stat:"FUE",maxDay:1,credits:12},
+{id:12,act:"🥋 Practicar artes marciales",criteria:"Realiza una clase o 20 minutos de práctica segura.",rew:"",stat:"AGI",maxDay:1,credits:12},
+{id:13,act:"🏃 Correr o trotar",criteria:"Haz 15 minutos a ritmo cómodo o tu sesión prevista.",rew:"",stat:"VIT",maxDay:1,credits:10},
+{id:14,act:"🧘 Movilidad y recuperación",criteria:"Haz 10 minutos de movilidad suave.",rew:"",stat:"DES",maxDay:1,credits:8},
+{id:15,act:"💻 Proyecto de software",criteria:"Trabaja 25 minutos y registra el siguiente paso.",rew:"",stat:"INT",maxDay:2,credits:12},
+{id:16,act:"🎮 Proyecto de videojuegos",criteria:"Avanza una tarea concreta durante 25 minutos.",rew:"",stat:"INT",maxDay:2,credits:12},
+{id:17,act:"💡 Proyecto de negocio",criteria:"Completa una acción concreta durante 25 minutos.",rew:"",stat:"VOL",maxDay:2,credits:12},
+{id:18,act:"🔧 Proyecto tecnológico",criteria:"Resuelve o documenta un avance durante 25 minutos.",rew:"",stat:"INT",maxDay:2,credits:12},
+{id:19,act:"🔬 Investigar un tema",criteria:"Consulta una fuente y anota 3 hallazgos.",rew:"",stat:"INT",maxDay:1,credits:10},
+{id:20,act:"🧹 Ordenar mi espacio",criteria:"Guarda objetos y despeja una superficie concreta.",rew:"",stat:"VOL",maxDay:1,credits:8}
+];
+const DEFAULT_REWARDS = [
+{id:"game30",name:"30 min de videojuegos",icon:"🎮",price:20,maxDay:4,expiry:24},
+{id:"series30",name:"30 min de series",icon:"📺",price:18,maxDay:4,expiry:24},
+{id:"shower",name:"Ducha caliente + música",icon:"🚿",price:12,maxDay:1,expiry:12},
+{id:"breakfast",name:"Desayuno especial",icon:"🍳",price:15,maxDay:1,expiry:24},
+{id:"lunch",name:"Almuerzo elegido",icon:"🍜",price:25,maxDay:1,expiry:24},
+{id:"dinner",name:"Cena elegida",icon:"🍲",price:25,maxDay:1,expiry:24},
+{id:"snack",name:"Merienda rica",icon:"🍓",price:10,maxDay:3,expiry:24},
+{id:"wild",name:"Comodín de recompensa",icon:"🃏",price:35,maxDay:1,expiry:24},
+{id:"music",name:"20 min de música y descanso",icon:"🎧",price:10,maxDay:2,expiry:12},
+{id:"hobby",name:"30 min de hobby",icon:"🎨",price:18,maxDay:2,expiry:24}
 ];
 
 // ============ Estado y guardado ============
@@ -351,7 +413,7 @@ function freshState() {
 	const xp = {}; STATS.forEach(s => xp[s.id] = 0);
 	const rit = (n, g) => ({ n, g, s: 1, pairs: 0, tries: 0, log: {} });
 	const hab = (n, r, a) => ({ n, r, a, log: {} });
-	return { xp, pacts: DEFAULT_PACTS, day: today(), done: {}, hist: {}, active: {}, tasks: [], taskDone: {}, skin: "cyber", money: { cur: "$", goal: 0, list: [] }, avatar: { e: "🧑‍🚀", img: null }, crits: 0, mute: false, pin: null,
+	return { xp, pacts: DEFAULT_PACTS, day: today(), done: {}, hist: {}, active: {}, tasks: [], taskDone: {}, skin: "cyber", money: { cur: "$", goal: 0, list: [] }, credits: 0, rewards: DEFAULT_REWARDS.map(x=>({...x})), purchases: [], avatar: { e: "🧑‍🚀", img: null }, crits: 0, mute: false, pin: null,
 		sc: { // pub = app normal, sec = zona privada
 			pub: { sel: 0, rituals: [rit("🌙 Calma nocturna", "Mano en el pecho + respiro 4-6")],
 				sos: [hab("🎮 Videojuegos", "Quiero dormir bien y avanzar en mis estudios", ["Cerrar el juego y guardar", "Tomar agua", "Caminar 5 minutos", "Abrir el cuaderno 5 minutos"]),
@@ -372,7 +434,7 @@ function normalize(o) {
 	s.hist = o.hist && typeof o.hist === "object" ? o.hist : {};
 	s.active = o.active && typeof o.active === "object" ? o.active : {};
 	s.money = Object.assign(base.money, o.money || {});
-	s.money.list = Array.isArray(s.money.list) ? s.money.list : [];
+	s.money.list = Array.isArray(s.money.list) ? s.money.list : []; s.credits=Number.isFinite(o.credits)?o.credits:0; s.rewards=Array.isArray(o.rewards)?o.rewards:DEFAULT_REWARDS.map(x=>({...x})); s.purchases=Array.isArray(o.purchases)?o.purchases:[]; s.pacts.forEach(p=>{const def=DEFAULT_PACTS.find(d=>String(d.id)===String(p.id));p.maxDay=Math.max(1,+p.maxDay||(def&&def.maxDay)||1);p.credits=Math.max(1,+p.credits||(def&&def.credits)||10);p.criteria=p.criteria||(def&&def.criteria)||p.act;p.category=categoryForMission(p);});
 	s.avatar = Object.assign(base.avatar, o.avatar || {});
 	s.sc = Object.assign(base.sc, o.sc || {});
 	s.sc.pub = Object.assign(base.sc.pub, (o.sc && o.sc.pub) || {});
@@ -609,28 +671,28 @@ function addXP(stat, amt) {
 	if (levelOf(total()) > g) levelUp(levelOf(total()));
 }
 let justId = null;
+function pactDoneCount(id){return Object.keys(state.done||{}).filter(k=>k.startsWith(String(id)+"_")).length;}
 function doPact(id, full) {
-	if (state.done[id]) return;
-	const p = state.pacts.find(x => x.id == id); if (!p) return;
+ const p=state.pacts.find(x=>x.id==id); if(!p)return; const used=pactDoneCount(id); if(used>=(p.maxDay||1))return toast("Límite diario alcanzado"); const runKey=String(id)+"_"+(used+1);
 	let crit = false; // bonus sorpresa con tope diario
 	if (state.crits < CONFIG.CRIT_MAX_DAY && Math.random() < CONFIG.CRIT_CHANCE) { crit = true; state.crits++; }
 	const rw = rewardsOf(p, full, crit);
-	state.done[id] = { claimed: false };
-	(state.hist[id] = state.hist[id] || {})[today()] = full ? 1 : 0.5;
-	showReveal(p, rw, crit); // primero la tarjeta: así la subida de nivel espera a que la cierres
+	state.done[runKey] = {claimed:false,pactId:id}; state.credits=(state.credits||0)+(p.credits||10);
+	(state.hist[id] = state.hist[id] || {})[today()] = (state.hist[id][today()]||0)+(full?1:0.5);
+	showReveal({...p, runKey}, rw, crit, p.credits||10); // primero la tarjeta: así la subida de nivel espera a que la cierres
 	rw.forEach(r => addXP(r.s, r.xp)); save();
 	play(JINGLE); confetti(); kick(); shake(); flyCards(rw); if (crit) fireworks(); if (navigator.vibrate) navigator.vibrate([40, 30, 40]);
 	justId = id; setTimeout(() => { justId = null; }, 900);
 	renderAll();
 }
-function showReveal(p, rw, crit) {
+function showReveal(p, rw, crit, credits=10) {
 	const tot = rw.reduce((a, r) => a + r.xp, 0);
 	$("reveal").hidden = false;
 	$("reveal").innerHTML = `<div class="rbox"><div class="lootcard ${crit ? "legend" : ""}" id="lootcard"><div class="face back">❓</div><div class="face front">
 		<div class="em">${crit ? "🌟" : "🎁"}</div><h3>${crit ? "⚡ ¡CRÍTICO! XP doble" : "¡Misión cumplida!"}</h3>
 		<div>${rw.map(r => `<div class="rwrow"><span>${sIcon(r.s)} ${r.s}</span><b>+${r.xp} XP</b></div>`).join("")}</div>
-		<small>Total +${tot} XP</small><p>Botín desbloqueado:<br><b class="lootname">${esc(p.rew)}</b></p></div></div>
-		<button class="big" data-claim="${p.id}">Lo voy a disfrutar ✔</button></div>`;
+		<small>Total +${tot} XP · +${credits} ◈ CRÉDITOS</small><p>${esc(p.criteria||p.act)}</p><p>Compra tu recompensa cuando quieras en la tienda.</p></div></div>
+		<button class="big" data-claim="${p.runKey||p.id}">Lo voy a disfrutar ✔</button></div>`;
 	requestAnimationFrame(() => requestAnimationFrame(() => $("lootcard")?.classList.add("is-flipped")));
 }
 function claim(id) {
@@ -642,15 +704,16 @@ document.addEventListener("click", e => {
 	const t = e.target.closest("button"); if (!t) return;
 	if (t.dataset.do) doPact(t.dataset.do, t.dataset.f === "1");
 	if (t.dataset.claim) claim(t.dataset.claim);
+	if (t.dataset.mfilter) { missionCategoryFilter=t.dataset.mfilter; renderPacts(); }
+	if (t.dataset.reEdit) { const r=state.rewards.find(x=>String(x.id)===t.dataset.reEdit); if(r){ $("rName").value=r.name; $("rIcon").value=r.icon||"🎁"; $("rPrice").value=r.price; $("rMax").value=r.maxDay; $("rExpiry").value=r.expiry; $("rAdd").textContent="Guardar cambios"; $("rAdd").dataset.editReward=r.id; $("rName").focus(); } }
 	if (t.dataset.del) { state.pacts = state.pacts.filter(p => p.id != t.dataset.del); save(); renderAll(); }
 });
 $("nAdd").onclick = () => {
-	const a = $("nAct").value.trim(), r = $("nRew").value.trim(); if (!a || !r) return toast("Escribe misión y botín");
-	state.pacts.push({ id: Date.now(), act: a, rew: r, stat: $("nStat").value, stat2: $("nStat2").value }); $("nAct").value = $("nRew").value = ""; save(); renderAll(); toast("Misión creada 🎯");
+	const a=$("nAct").value.trim(),r=$("nRew").value.trim();if(!a)return toast("Escribe el nombre de la misión");state.pacts.push({id:Date.now(),act:a,rew:r,criteria:$("nCriteria").value.trim()||a,maxDay:Math.max(1,Math.min(10,+$("nMax").value||1)),credits:Math.max(1,+$("nCredits").value||10),category:$("nCategory").value||"Otros",stat:$("nStat").value,stat2:$("nStat2").value});$("nAct").value=$("nRew").value=$("nCriteria").value=""; save(); renderAll(); toast("Misión creada 🎯");
 };
 
 // ============ Navegación ============
-const TABS = ["hoy", "pactos", "tareas", "stats", "calma"];
+const TABS = ["hoy", "pactos", "tienda", "tareas", "stats", "calma"];
 function goTab(name) {
 	TABS.forEach(n => { $("tab-" + n).classList.toggle("on", n === name); $("n-" + n).classList.toggle("on", n === name); });
 	const t = $("tab-" + name); t.classList.remove("enter"); void t.offsetWidth; t.classList.add("enter");
@@ -671,22 +734,37 @@ function renderHead() {
 	$("streak").innerHTML = `🔥 ${n}<small>días activos</small>`;
 	$("chips").innerHTML = STATS.map(s => `<button class="st" data-stat="${s.id}">${s.icon}<b>${levelOf(state.xp[s.id] || 0)}</b><small>${s.id}</small></button>`).join("");
 }
+let missionCategoryFilter = "Todas";
+const MISSION_CATEGORIES = ["Hogar","Salud","Trabajo","Estudio","Desarrollo personal","Otros"];
+function categoryForMission(p) {
+ if (MISSION_CATEGORIES.includes(p.category)) return p.category;
+ const t = ((p.act||"")+" "+(p.criteria||"")).toLowerCase();
+ if (/cama|orden|limpia|lavar|cocina|ropa|habitación|hogar|casa/.test(t)) return "Hogar";
+ if (/camina|correr|trotar|entren|calistenia|pesas|artes marciales|movilidad|ducha|sueño|descanso|agua/.test(t)) return "Salud";
+ if (/trabajo|laboral|proyecto|cliente|reunión|correo/.test(t)) return "Trabajo";
+ if (/estudi|curso|leer|lectura|resum|aprendizaje|ciberseguridad|clase|libro/.test(t)) return "Estudio";
+ if (/medit|respir|diario|planific|reflex|hobby|creativ/.test(t)) return "Desarrollo personal";
+ return "Otros";
+}
+function renderMissionFilters() {
+ const categories = ["Todas",...MISSION_CATEGORIES];
+ $("missionFilters").innerHTML = categories.map(c=>`<button type="button" class="${missionCategoryFilter===c?"on":""}" data-mfilter="${esc(c)}">${c} <small>${c==="Todas"?state.pacts.length:state.pacts.filter(p=>categoryForMission(p)===c).length}</small></button>`).join("");
+}
 function renderPacts() {
-	const n = state.pacts.length, d = Object.values(state.done).filter(x => x.claimed).length;
-	$("dayBar").style.width = (n ? d / n * 100 : 0) + "%"; $("dayTxt").textContent = `${d} de ${n} misiones cumplidas con botín`;
-	$("pacts").innerHTML = state.pacts.map(p => {
-		const dn = state.done[p.id], st = !dn ? "locked" : dn.claimed ? "claimed" : "ready", ci = Math.max(0, STATS.findIndex(s => s.id === p.stat));
-		const chips = rewardsOf(p, true, false).map(r => `<span class="rw">${sIcon(r.s)} ${r.s} +${r.xp}</span>`).join("");
-		const foot = !dn ? `<button class="big" data-do="${p.id}" data-f="1">¡Lo hice!</button><button class="alt" data-do="${p.id}" data-f="0">Versión mínima (½ XP)</button>`
-			: dn.claimed ? `<small>¡Misión cumplida!</small>` : `<button class="big" data-claim="${p.id}">🎁 Reclamar botín</button>`;
-		return `<div class="tile pact ${st} ${justId == p.id ? "just" : ""}" style="--c:${COLORS[ci]}"><span class="badge">${st === "claimed" ? "✅" : st === "ready" ? "🎁" : "🔒"}</span>
-			<small>MISIÓN</small><b>${esc(p.act)}</b><div class="rws">${chips}</div><span class="arrow">⬇</span><small>${dn ? "DESBLOQUEADO" : "BOTÍN"}</small><b class="reward">${esc(p.rew)}</b>${foot}</div>`;
-	}).join("");
+	const slots=state.pacts.reduce((n,p)=>n+(p.maxDay||1),0),done=Object.keys(state.done||{}).length,target=Math.max(1,Math.ceil(slots*.4));
+ $("dayBar").style.width=Math.min(100,done/target*100)+"%"; $("dayTxt").textContent=`Meta diaria: ${Math.min(done,target)}/${target} acciones · ${Math.round(target/slots*100)}% del total. ${done>=target?"¡Meta alcanzada! Cada hito extra también cuenta.":"Al llegar a la meta, sigue sumando hitos extra."}`;
+ const milestones=[Math.ceil(slots*.6),Math.ceil(slots*.8),slots]; state.dayMilestones=state.dayMilestones||{};
+ milestones.forEach((n,i)=>{const k=today()+"_"+i;if(done>=n&&!state.dayMilestones[k]){state.dayMilestones[k]=true;addXP("VOL",[10,15,25][i]);toast(["✨ Hito extra +10 XP","🔥 Gran constancia +15 XP","🏆 Todas las acciones +25 XP"][i]);save();}});
+ renderMissionFilters();
+ $("pacts").innerHTML=state.pacts.filter(p=>missionCategoryFilter==="Todas"||categoryForMission(p)===missionCategoryFilter).map(p=>{const used=pactDoneCount(p.id),max=p.maxDay||1,ci=Math.max(0,STATS.findIndex(s=>s.id===p.stat));
+ const foot=used<max?`<button class="big" data-do="${p.id}" data-f="1">✓ Cumplida · +${p.credits||10} ◈</button><button class="alt" data-do="${p.id}" data-f="0">Versión mínima (½ XP)</button>`:"<small>✅ Límite diario completado</small>";
+ return `<div class="tile pact ${used>=max?"claimed":"locked"}" style="--c:${COLORS[ci]}"><span class="badge">${used>=max?"✅":"🎯"}</span><small>MISIÓN · ${esc(categoryForMission(p).toUpperCase())} · ${used}/${max} HOY</small><b>${esc(p.act)}</b><small style="letter-spacing:0">${esc(p.criteria||p.act)}</small><div class="rws"><span class="rw">+${p.credits||10} ◈</span><span class="rw">${sIcon(p.stat)} ${p.stat} XP</span></div>${foot}</div>`;
+ }).join("");
 }
 function renderList() {
 	const opts = s => STATS.map(x => `<option value="${x.id}" ${x.id === s ? "selected" : ""}>${x.icon} ${x.id}</option>`).join("");
 	if (!$("nStat").innerHTML) { $("nStat").innerHTML = opts("VOL"); $("nStat2").innerHTML = '<option value="">— sin secundario —</option>' + opts(""); }
-	$("plist").innerHTML = state.pacts.map(p => `<div class="card"><div class="sechead"><span>${esc(p.act)} ➜ ${esc(p.rew)}<br><small>${sIcon(p.stat)} ${p.stat}${p.stat2 ? " + " + sIcon(p.stat2) + " " + p.stat2 : ""}</small></span>
+	$("plist").innerHTML = state.pacts.map(p => `<div class="card"><div class="sechead"><span>${esc(p.act)}<br><small>${esc(p.criteria||p.act)} · máx. ${p.maxDay||1}/día · +${p.credits||10} ◈<br>${sIcon(p.stat)} ${p.stat}${p.stat2 ? " + " + sIcon(p.stat2) + " " + p.stat2 : ""}</small></span>
 		<span><button data-ed="m" data-id="${p.id}">✏️</button> <button data-del="${p.id}">🗑️</button></span></div></div>`).join("");
 }
 function showStat(id) {
@@ -734,6 +812,27 @@ document.addEventListener("click", e => {
 	save(); renderAll();
 });
 
+// ============ Tienda de recompensas ============
+function renderShop(){
+ $("creditBalance").textContent=`${state.credits||0} ◈`;
+ const todayP=state.purchases.filter(p=>p.date===today());
+ $("shopItems").innerHTML=state.rewards.map(r=>{const n=todayP.filter(p=>p.rewardId===r.id).length,disabled=(state.credits||0)<r.price||n>=r.maxDay;return `<div class="tile pact"><span class="badge">${esc(r.icon||"🎁")}</span><small>RECOMPENSA · ${n}/${r.maxDay} HOY</small><b>${esc(r.name)}</b><div class="rws"><span class="rw">${r.price} ◈</span><span class="rw">Caduca en ${Math.min(24,r.expiry||24)} h</span></div><button class="big" data-buy="${esc(r.id)}" ${disabled?"disabled":""}>${n>=r.maxDay?"Límite diario":(state.credits||0)<r.price?"Faltan créditos":"Comprar"}</button><button class="alt" data-re-edit="${esc(r.id)}" style="margin-top:8px">✏️ Editar recompensa</button></div>`}).join("");
+ $("inventory").innerHTML=state.purchases.filter(p=>!p.used&&p.expires>Date.now()).map(p=>`<div class="mrow"><div class="grow"><b>${esc(p.icon)} ${esc(p.name)}</b><br><small>Vence ${new Date(p.expires).toLocaleString("es-PE",{dateStyle:"short",timeStyle:"short"})}</small></div><button data-use="${p.id}">Usar</button></div>`).join("")||"<small>No tienes recompensas pendientes. Las compras vencidas dejan de aparecer aquí.</small>";
+}
+document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+ if(b.dataset.buy){const r=state.rewards.find(x=>String(x.id)===b.dataset.buy);if(!r)return;const n=state.purchases.filter(p=>p.rewardId===r.id&&p.date===today()).length;if(state.credits<r.price||n>=r.maxDay)return toast("No puedes comprar esta recompensa");state.credits-=r.price;state.purchases.push({id:Date.now(),rewardId:r.id,name:r.name,icon:r.icon,date:today(),expires:Date.now()+Math.min(24,Math.max(1,r.expiry||24))*3600000,used:false});save();renderAll();toast("¡Recompensa comprada! 🎁");}
+ if(b.dataset.use){const p=state.purchases.find(x=>x.id==b.dataset.use);if(p&&!p.used&&p.expires>Date.now()){p.used=true;save();renderAll();toast("¡A disfrutar tu recompensa! ✨");}}
+});
+const rewardAddButton = $("rAdd");
+if (rewardAddButton) rewardAddButton.onclick=()=>{
+ const name=$("rName").value.trim(); if(!name)return toast("Escribe un nombre");
+ const data={name,icon:$("rIcon").value.trim()||"🎁",price:Math.max(1,+$("rPrice").value||1),maxDay:Math.max(1,Math.min(10,+$("rMax").value||1)),expiry:Math.max(1,Math.min(24,+$("rExpiry").value||24))};
+ const editing=rewardAddButton.dataset.editReward;
+ if(editing){const r=state.rewards.find(x=>String(x.id)===String(editing));if(r)Object.assign(r,data);delete rewardAddButton.dataset.editReward;rewardAddButton.textContent="Crear recompensa";toast("Recompensa actualizada");}
+ else {state.rewards.push({id:"custom_"+Date.now(),...data});toast("Recompensa creada");}
+ $("rName").value="";$("rIcon").value="🎁";$("rPrice").value=20;$("rMax").value=1;$("rExpiry").value=24;save();renderAll();
+};
+
 // ============ Oro ============
 const money = n => (n < 0 ? "−" : "") + state.money.cur + " " + Math.abs(n).toLocaleString("es", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 function renderGold() {
@@ -756,7 +855,7 @@ document.addEventListener("click", e => {
 	const M = state.money, g = b.dataset.g, id = +b.dataset.id;
 	if (b.dataset.ed === "m") {
 		const p = state.pacts.find(x => x.id == b.dataset.id), so = STATS.map(s => [s.id, s.icon + " " + s.id]);
-		return openEditor("✏️ Editar misión", [{ k: "act", l: "Misión", v: p.act }, { k: "rew", l: "Botín real", v: p.rew },
+		return openEditor("✏️ Editar misión", [{ k: "act", l: "Misión (título corto)", v: p.act }, { k: "criteria", l: "Criterio de cumplimiento", v: p.criteria||p.act }, { k: "maxDay", l: "Veces máximas al día", t:"number", v:p.maxDay||1 }, { k: "credits", l: "Créditos ganados", t:"number", v:p.credits||10 },
 			{ k: "stat", l: "Atributo principal (100% del XP)", v: p.stat, o: so }, { k: "stat2", l: "Atributo secundario (50%)", v: p.stat2 || "", o: [["", "— ninguno —"], ...so] }], v => Object.assign(p, v));
 	}
 	if (g === "in" || g === "out") {
@@ -975,7 +1074,7 @@ function boot() {
 	}, 380);
 	B.onclick = () => { clearInterval(iv); B.hidden = true; kick(); };
 }
-function renderAll() { renderHead(); renderPacts(); renderList(); renderStats(); renderTasks(); renderGold(); $("calma").innerHTML = panel("pub"); if (secOpen) $("secBody").innerHTML = panel("sec"); }
+function renderAll() { renderHead(); renderPacts(); renderShop(); renderList(); renderStats(); renderTasks(); renderGold(); $("calma").innerHTML = panel("pub"); if (secOpen) $("secBody").innerHTML = panel("sec"); }
 // Si la app queda abierta pasada la medianoche, reinicia las misiones del día
 function checkNewDay() {
 	if (state.day === today()) return;
