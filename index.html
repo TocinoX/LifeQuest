@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#08060f">
-<title>Umbral</title>
+<title>LifeQuest</title>
 <style>
 /* ===== Base ===== */
 *, *::before, *::after { box-sizing: border-box; }
@@ -240,8 +240,17 @@ details { margin-top:8px; } summary { cursor:pointer; color:var(--muted); font-w
 .mission-filters { display:flex; flex-wrap:wrap; gap:7px; margin:8px 0 12px; }
 .mission-filters button { padding:7px 11px; border:1px solid var(--border); border-radius:999px; background:var(--card); color:var(--text); font-size:.78rem; }
 .mission-filters button.on { background:var(--lime); color:#111; border-color:var(--lime); }
+#tab-tareas { display:none !important; }
 #tab-tienda .tile { margin-block: 8px; }
 #tab-tienda .bento { row-gap: 16px; }
+#tab-hoy #pacts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; min-width:0; }
+#tab-hoy #pacts > .pact { min-width:0; width:100%; margin:0; }
+#activeTimer:empty { display:none; }
+.timer-panel { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px; border:1px solid var(--cyan); border-radius:var(--r); background:color-mix(in srgb,var(--cyan) 9%,var(--card)); margin:8px 0 12px; }
+.timer-panel .timer-clock { font-size:1.8rem; font-weight:900; font-variant-numeric:tabular-nums; color:var(--cyan); }
+.planner-box { margin-top:14px; padding-top:14px; border-top:1px solid var(--line); }
+.planner-box textarea { width:100%; min-height:150px; resize:vertical; }
+#tab-pactos .bento { row-gap:14px; }
 @media (max-width:699px) {
   /* En Hoy, el contenedor principal pasa a una columna. Las misiones usan
      display:contents para participar directamente en esta cuadrícula; no
@@ -250,8 +259,8 @@ details { margin-top:8px; } summary { cursor:pointer; color:var(--muted); font-w
   #tab-hoy .bento > .span2,
   #tab-hoy .bento > .hud,
   #tab-hoy #missionFilters { grid-column:1 / -1; min-width:0; }
-  #tab-hoy #pacts { display:contents; }
-  #tab-hoy #pacts > .pact { grid-column:1 / -1; width:100%; min-width:0; margin:0; }
+  #tab-hoy #pacts { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; width:100%; }
+  #tab-hoy #pacts > .pact { grid-column:1; width:100%; min-width:0; margin:0; }
   #tab-hoy .tile, #tab-hoy .pact { min-width:0; overflow-wrap:anywhere; }
   #tab-hoy .mission-filters { gap:6px; }
   #tab-hoy .mission-filters button { max-width:100%; white-space:normal; }
@@ -284,16 +293,23 @@ details { margin-top:8px; } summary { cursor:pointer; color:var(--muted); font-w
 		<section class="tile span2" id="gold"></section>
 		<section class="tile span2"><h2>Progreso de hoy</h2><div class="bar"><i id="dayBar"></i></div><small id="dayTxt"></small></section>
 		<section class="tile span2"><h2>Atributos</h2><div class="chips" id="chips"></div></section>
-		<div class="span2"><div id="missionFilters" class="mission-filters" aria-label="Filtrar misiones"></div></div><div id="pacts" class="pacts"></div>
+		<div class="span2"><div id="activeTimer"></div><div id="missionFilters" class="mission-filters" aria-label="Filtrar misiones"></div></div><div id="pacts" class="pacts"></div>
 	</div></div>
 	<div class="tab" id="tab-pactos"><div class="bento">
 		<section class="tile span2">
 			<h2>Nueva misión: “Cuando hago… gano…”</h2>
 			<input type="text" id="nAct" placeholder="Misión (ej: tender la cama)" style="margin-bottom:8px">
-			<input type="text" id="nRew" placeholder="Recompensa relacionada (opcional)" style="margin-bottom:8px"><input type="text" id="nCriteria" placeholder="Criterio concreto (ej. estudiar 25 min)" style="margin-bottom:8px"><label for="nCategory">Categoría de la misión</label><select id="nCategory" style="margin-bottom:10px"><option>Hogar</option><option>Salud</option><option>Trabajo</option><option>Estudio</option><option>Desarrollo personal</option><option>Otros</option></select><div class="btns"><input type="number" id="nMax" min="1" max="10" value="1" placeholder="Veces/día"><input type="number" id="nCredits" min="1" value="10" placeholder="Créditos"></div>
+			<input type="text" id="nRew" placeholder="Recompensa relacionada (opcional)" style="margin-bottom:8px"><input type="text" id="nCriteria" placeholder="Criterio concreto (ej. estudiar 25 min)" style="margin-bottom:8px"><label for="nCategory">Categoría de la misión</label><select id="nCategory" style="margin-bottom:10px"><option>Hogar</option><option>Salud</option><option>Trabajo</option><option>Estudio</option><option>Desarrollo personal</option><option>Otros</option></select><label for="nType">Tipo de misión</label><select id="nType" style="margin-bottom:8px"><option value="simple">Simple · completar y cobrar</option><option value="timer">Cronómetro · completar por tiempo</option></select><div class="btns"><input type="number" id="nDuration" min="1" max="240" value="25" placeholder="Minutos de cronómetro"><input type="number" id="nMax" min="1" max="10" value="1" placeholder="Veces/día"><input type="number" id="nCredits" min="1" value="10" placeholder="Créditos"></div>
 			<label>Atributo principal (100% del XP) y secundario (50%, opcional)</label>
 			<div class="btns" style="margin-bottom:8px"><select id="nStat"></select><select id="nStat2"></select></div>
 			<button id="nAdd" class="big" style="animation:none">➕ Crear misión</button>
+            <div class="planner-box">
+              <h2>🧠 Planifica tu día con IA</h2>
+              <p><small>Copia el prompt, cuéntale a la IA qué necesitas hacer hoy y pega aquí el JSON que te devuelva. Se crearán las misiones sin organizar horarios ni agendas.</small></p>
+              <div class="btns" style="margin-top:8px; margin-bottom: 8px;"><button id="copyPlannerPrompt" class="alt" type="button">📋 Copiar prompt para la IA</button><button id="clearPlanner" class="alt" type="button">🧹 Limpiar texto</button></div>
+              <textarea id="plannerImport" placeholder='Pega aquí el JSON de misiones que te devolvió la IA…'></textarea>
+			  <button id="importPlanner" class="big" type="button" style="animation:none">＋ Reemplazar misiones con el plan</button>
+            </div>
 		</section>
 		<div id="plist" class="plist"></div>
 	</div></div>
@@ -338,7 +354,7 @@ details { margin-top:8px; } summary { cursor:pointer; color:var(--muted); font-w
 <nav>
 	<button id="n-hoy" class="on">🏠<small>Hoy</small></button>
 	<button id="n-pactos">🎯<small>Misiones</small></button>
-	<button id="n-tienda">🛍️<small>Tienda</small></button><button id="n-tareas">✅<small>Tareas</small></button>
+	<button id="n-tienda">🛍️<small>Tienda</small></button>
 	<button id="n-stats">📊<small>Stats</small></button>
 	<button id="n-calma">🧘<small>Calma</small></button>
 </nav>
@@ -381,7 +397,7 @@ const DEFAULT_PACTS = [
 {id:5,act:"🛡️ Estudiar ciberseguridad",criteria:"Estudia o practica durante 25 minutos.",rew:"",stat:"INT",maxDay:2,credits:12},
 {id:6,act:"📚 Estudiar generales",criteria:"Completa 25 minutos y anota qué avanzaste.",rew:"",stat:"INT",maxDay:2,credits:12},
 {id:7,act:"🎓 Avanzar curso online",criteria:"Completa una lección o 25 minutos de curso.",rew:"",stat:"INT",maxDay:2,credits:12},
-{id:8,act:"📖 Leer literatura",criteria:"Lee durante 15 minutos o termina una sección.",rew:"",stat:"INT",maxDay:1,credits:8},
+{id:8,act:"📖 Leer literatura",criteria:"Lee durante 15 minutos o termina una sección.",rew:"",stat:"INT",maxDay:1,credits:8,type:"timer",durationMin:15},
 {id:9,act:"📝 Resumir aprendizaje",criteria:"Escribe 3 ideas clave de algo aprendido.",rew:"",stat:"INT",maxDay:1,credits:8},
 {id:10,act:"🤸 Entrenar calistenia",criteria:"Completa tu sesión planificada, adaptada a tu nivel.",rew:"",stat:"FUE",maxDay:1,credits:12},
 {id:11,act:"🏋️ Entrenar con pesas",criteria:"Completa tu rutina planificada con técnica segura.",rew:"",stat:"FUE",maxDay:1,credits:12},
@@ -413,7 +429,7 @@ function freshState() {
 	const xp = {}; STATS.forEach(s => xp[s.id] = 0);
 	const rit = (n, g) => ({ n, g, s: 1, pairs: 0, tries: 0, log: {} });
 	const hab = (n, r, a) => ({ n, r, a, log: {} });
-	return { xp, pacts: DEFAULT_PACTS, day: today(), done: {}, hist: {}, active: {}, tasks: [], taskDone: {}, skin: "cyber", money: { cur: "$", goal: 0, list: [] }, credits: 0, rewards: DEFAULT_REWARDS.map(x=>({...x})), purchases: [], avatar: { e: "🧑‍🚀", img: null }, crits: 0, mute: false, pin: null,
+	return { xp, pacts: [], day: today(), done: {}, hist: {}, active: {}, tasks: [], taskDone: {}, skin: "cyber", money: { cur: "$", goal: 0, list: [] }, credits: 0, rewards: DEFAULT_REWARDS.map(x=>({...x})), purchases: [], activeTimer: null, avatar: { e: "🧑‍🚀", img: null }, crits: 0, mute: false, pin: null,
 		sc: { // pub = app normal, sec = zona privada
 			pub: { sel: 0, rituals: [rit("🌙 Calma nocturna", "Mano en el pecho + respiro 4-6")],
 				sos: [hab("🎮 Videojuegos", "Quiero dormir bien y avanzar en mis estudios", ["Cerrar el juego y guardar", "Tomar agua", "Caminar 5 minutos", "Abrir el cuaderno 5 minutos"]),
@@ -428,13 +444,23 @@ function normalize(o) {
 	const base = freshState(), s = Object.assign(base, o);
 	// Compatibilidad con respaldos/guardados antiguos o incompletos.
 	s.xp = Object.assign(base.xp, o.xp || {});
-	s.pacts = Array.isArray(o.pacts) ? o.pacts : base.pacts;
+	s.pacts = Array.isArray(o.pacts) ? o.pacts : [];
+ // Migración: quitar las misiones de ejemplo antiguas y conservar las creadas por el usuario.
+ s.pacts = s.pacts.filter(p => !DEFAULT_PACTS.some(d => String(p.id)===String(d.id) && p.act===d.act));
 	s.tasks = Array.isArray(o.tasks) ? o.tasks : [];
 	s.taskDone = o.taskDone && typeof o.taskDone === "object" ? o.taskDone : {};
 	s.hist = o.hist && typeof o.hist === "object" ? o.hist : {};
 	s.active = o.active && typeof o.active === "object" ? o.active : {};
 	s.money = Object.assign(base.money, o.money || {});
-	s.money.list = Array.isArray(s.money.list) ? s.money.list : []; s.credits=Number.isFinite(o.credits)?o.credits:0; s.rewards=Array.isArray(o.rewards)?o.rewards:DEFAULT_REWARDS.map(x=>({...x})); s.purchases=Array.isArray(o.purchases)?o.purchases:[]; s.pacts.forEach(p=>{const def=DEFAULT_PACTS.find(d=>String(d.id)===String(p.id));p.maxDay=Math.max(1,+p.maxDay||(def&&def.maxDay)||1);p.credits=Math.max(1,+p.credits||(def&&def.credits)||10);p.criteria=p.criteria||(def&&def.criteria)||p.act;p.category=categoryForMission(p);});
+	s.money.list = Array.isArray(s.money.list) ? s.money.list : [];
+ // La versión anterior podía concatenar créditos como texto al editar una misión.
+ // Un saldo guardado como string es señal de ese fallo; no es posible reconstruirlo con certeza.
+ s.credits = typeof o.credits === "string" ? 0 : Math.max(0, Number(o.credits) || 0);
+ s.rewards = (Array.isArray(o.rewards) ? o.rewards : DEFAULT_REWARDS.map(x=>({...x}))).map(r=>({...r,price:Math.max(1,Number(r.price)||1),maxDay:Math.max(1,Number(r.maxDay)||1),expiry:Math.max(1,Math.min(24,Number(r.expiry)||24))}));
+ s.purchases = Array.isArray(o.purchases) ? o.purchases : [];
+ s.done = o.done && typeof o.done === "object" && !Array.isArray(o.done) ? o.done : {};
+ s.activeTimer = o.activeTimer && typeof o.activeTimer === "object" ? o.activeTimer : null;
+ s.pacts.forEach(p=>{const def=DEFAULT_PACTS.find(d=>String(d.id)===String(p.id));p.maxDay=Math.max(1,Math.min(10,Number(p.maxDay)||(def&&def.maxDay)||1));p.credits=Math.max(1,Number(p.credits)||(def&&def.credits)||10);p.criteria=p.criteria||(def&&def.criteria)||p.act;p.type=(p.type==="timer"||(String(p.id)==="8"&&!p.type))?"timer":"simple";p.durationMin=Math.max(1,Math.min(240,Number(p.durationMin)||((String(p.id)==="8")?15:25)));p.category=categoryForMission(p);});
 	s.avatar = Object.assign(base.avatar, o.avatar || {});
 	s.sc = Object.assign(base.sc, o.sc || {});
 	s.sc.pub = Object.assign(base.sc.pub, (o.sc && o.sc.pub) || {});
@@ -443,7 +469,7 @@ function normalize(o) {
 	if (!Array.isArray(s.sc.pub.sos)) s.sc.pub.sos = base.sc.pub.sos;
 	if (!Array.isArray(s.sc.sec.rituals)) s.sc.sec.rituals = base.sc.sec.rituals;
 	if (!Array.isArray(s.sc.sec.sos)) s.sc.sec.sos = base.sc.sec.sos;
-	if (s.day !== today()) { s.day = today(); s.done = {}; s.crits = 0; } // día nuevo: se reinician las misiones
+	if (s.day !== today()) { s.day = today(); s.done = {}; s.crits = 0; s.activeTimer = null; } // día nuevo: se reinician las misiones
 	s.pacts.forEach(p => { if (p.stat === "ORO") p.stat = "VOL"; if (p.stat2 === "ORO") p.stat2 = ""; });
 	return s;
 }
@@ -671,19 +697,63 @@ function addXP(stat, amt) {
 	if (levelOf(total()) > g) levelUp(levelOf(total()));
 }
 let justId = null;
-function pactDoneCount(id){return Object.keys(state.done||{}).filter(k=>k.startsWith(String(id)+"_")).length;}
-function doPact(id, full) {
- const p=state.pacts.find(x=>x.id==id); if(!p)return; const used=pactDoneCount(id); if(used>=(p.maxDay||1))return toast("Límite diario alcanzado"); const runKey=String(id)+"_"+(used+1);
-	let crit = false; // bonus sorpresa con tope diario
-	if (state.crits < CONFIG.CRIT_MAX_DAY && Math.random() < CONFIG.CRIT_CHANCE) { crit = true; state.crits++; }
-	const rw = rewardsOf(p, full, crit);
-	state.done[runKey] = {claimed:false,pactId:id}; state.credits=(state.credits||0)+(p.credits||10);
+function pactDoneCount(id){
+ return Object.values(state.done||{}).filter(v=>v && String(v.pactId)===String(id) && v.date===today()).length;
+}
+function completePact(id, full) {
+ const p=state.pacts.find(x=>String(x.id)===String(id)); if(!p)return;
+ const used=pactDoneCount(id); if(used>=(Number(p.maxDay)||1))return toast("Límite diario alcanzado");
+ const runKey=String(id)+"_"+(used+1);
+ let crit = false;
+ if ((Number(state.crits)||0) < CONFIG.CRIT_MAX_DAY && Math.random() < CONFIG.CRIT_CHANCE) { crit = true; state.crits=(Number(state.crits)||0)+1; }
+ const rw = rewardsOf(p, full, crit);
+ state.done[runKey] = {claimed:false,pactId:String(id),date:today()};
+ state.credits = Math.max(0,Number(state.credits)||0) + Math.max(0,Number(p.credits)||10);
 	(state.hist[id] = state.hist[id] || {})[today()] = (state.hist[id][today()]||0)+(full?1:0.5);
 	showReveal({...p, runKey}, rw, crit, p.credits||10); // primero la tarjeta: así la subida de nivel espera a que la cierres
 	rw.forEach(r => addXP(r.s, r.xp)); save();
 	play(JINGLE); confetti(); kick(); shake(); flyCards(rw); if (crit) fireworks(); if (navigator.vibrate) navigator.vibrate([40, 30, 40]);
 	justId = id; setTimeout(() => { justId = null; }, 900);
 	renderAll();
+}
+function cancelActiveTimer(silent=false){
+ if(!state.activeTimer)return false;
+ // Invalidar la sesión antes de redibujar: ningún tick pendiente puede completarla.
+ const cancelledId=state.activeTimer.sessionToken;
+ state.activeTimer=null;
+ if(timerInterval){clearInterval(timerInterval);timerInterval=null;}
+ save(); renderAll();
+ if(!silent)toast("Cronómetro cancelado. No se entregaron créditos ni XP y la misión sigue pendiente.");
+ return true;
+}
+function startPact(id, full=true){
+ const p=state.pacts.find(x=>String(x.id)===String(id)); if(!p)return;
+ if(state.activeTimer){
+   if(String(state.activeTimer.missionId)===String(id))return toast("Esta sesión ya está en curso. Puedes cancelarla desde el contador superior.");
+   if(!confirm("Hay un cronómetro en curso. ¿Quieres cancelarlo sin recompensa y continuar con esta misión?"))return;
+   cancelActiveTimer(true);
+ }
+ if(pactDoneCount(p.id)>=(Number(p.maxDay)||1))return toast("Límite diario alcanzado");
+ if(p.type==="timer"){
+   state.activeTimer={missionId:String(p.id),startedAt:Date.now(),endsAt:Date.now()+Math.max(1,Number(p.durationMin)||25)*60000,full,sessionToken:"timer_"+Date.now()+"_"+Math.random().toString(36).slice(2)};
+   save();renderAll();updateTimerUI();toast("⏱️ ¡Sesión iniciada! El crédito llega al terminar.");return;
+ }
+ completePact(p.id,full);
+}
+let timerInterval=null;
+function updateTimerUI(){
+ const el=$("activeTimer"); if(!el)return;
+ if(!state.activeTimer){el.innerHTML="";if(timerInterval){clearInterval(timerInterval);timerInterval=null;}return;}
+ const t=state.activeTimer,token=t.sessionToken,p=state.pacts.find(x=>String(x.id)===String(t.missionId));
+ if(!p){state.activeTimer=null;save();el.innerHTML="";if(timerInterval){clearInterval(timerInterval);timerInterval=null;}return;}
+ const left=Math.max(0,Math.ceil((t.endsAt-Date.now())/1000));
+ el.innerHTML=`<div class="timer-panel"><div><small>⏳ SESIÓN EN CURSO</small><b style="display:block">${esc(p.act)}</b><div class="timer-clock">${fmt(left)}</div><small>Al llegar a cero recibirás tus créditos y XP.</small></div><button class="alt" data-cancel-timer="1" type="button">Cancelar</button></div>`;
+ if(left<=0){
+   // Solo la sesión que sigue activa y llegó a cero puede completar la misión.
+   if(!state.activeTimer||state.activeTimer.sessionToken!==token)return;
+   const id=p.id,full=t.full!==false;state.activeTimer=null;if(timerInterval){clearInterval(timerInterval);timerInterval=null;}save();completePact(id,full);toast("¡Sesión completada! Recompensa desbloqueada 🎉");return;
+ }
+ if(!timerInterval)timerInterval=setInterval(updateTimerUI,1000);
 }
 function showReveal(p, rw, crit, credits=10) {
 	const tot = rw.reduce((a, r) => a + r.xp, 0);
@@ -702,18 +772,38 @@ function claim(id) {
 }
 document.addEventListener("click", e => {
 	const t = e.target.closest("button"); if (!t) return;
-	if (t.dataset.do) doPact(t.dataset.do, t.dataset.f === "1");
+	if (t.dataset.do) startPact(t.dataset.do, t.dataset.f === "1");
+    if (t.dataset.cancelTimer) { if(confirm("¿Cancelar esta sesión? No recibirás créditos ni XP por ella.")) cancelActiveTimer(); return; }
 	if (t.dataset.claim) claim(t.dataset.claim);
 	if (t.dataset.mfilter) { missionCategoryFilter=t.dataset.mfilter; renderPacts(); }
-	if (t.dataset.reEdit) { const r=state.rewards.find(x=>String(x.id)===t.dataset.reEdit); if(r){ $("rName").value=r.name; $("rIcon").value=r.icon||"🎁"; $("rPrice").value=r.price; $("rMax").value=r.maxDay; $("rExpiry").value=r.expiry; $("rAdd").textContent="Guardar cambios"; $("rAdd").dataset.editReward=r.id; $("rName").focus(); } }
+	if (t.dataset.reEdit) { const r=state.rewards.find(x=>String(x.id)===t.dataset.reEdit); if(r) openEditor("✏️ Editar recompensa", [{k:"name",l:"Nombre",v:r.name},{k:"icon",l:"Emoji",v:r.icon||"🎁"},{k:"price",l:"Precio en créditos",t:"number",v:r.price},{k:"maxDay",l:"Compras máximas al día",t:"number",v:r.maxDay},{k:"expiry",l:"Caducidad en horas (máx. 24)",t:"number",v:r.expiry}], v=>{r.name=v.name.trim()||r.name;r.icon=v.icon.trim()||"🎁";r.price=Math.max(1,Number(v.price)||1);r.maxDay=Math.max(1,Math.min(10,Number(v.maxDay)||1));r.expiry=Math.max(1,Math.min(24,Number(v.expiry)||24));}); }
+    if (t.dataset.reDelete) { const r=state.rewards.find(x=>String(x.id)===t.dataset.reDelete); if(!r)return; if(!confirm(`¿Borrar la recompensa “${r.name}”? Esta acción no se puede deshacer.`))return; state.rewards=state.rewards.filter(x=>String(x.id)!==String(r.id)); save();renderAll();toast("Recompensa eliminada."); }
 	if (t.dataset.del) { state.pacts = state.pacts.filter(p => p.id != t.dataset.del); save(); renderAll(); }
 });
 $("nAdd").onclick = () => {
-	const a=$("nAct").value.trim(),r=$("nRew").value.trim();if(!a)return toast("Escribe el nombre de la misión");state.pacts.push({id:Date.now(),act:a,rew:r,criteria:$("nCriteria").value.trim()||a,maxDay:Math.max(1,Math.min(10,+$("nMax").value||1)),credits:Math.max(1,+$("nCredits").value||10),category:$("nCategory").value||"Otros",stat:$("nStat").value,stat2:$("nStat2").value});$("nAct").value=$("nRew").value=$("nCriteria").value=""; save(); renderAll(); toast("Misión creada 🎯");
+	const a=$("nAct").value.trim(),r=$("nRew").value.trim();if(!a)return toast("Escribe el nombre de la misión");state.pacts.push({id:"m_"+Date.now(),act:a,rew:r,criteria:$("nCriteria").value.trim()||a,maxDay:Math.max(1,Math.min(10,Number($("nMax").value)||1)),credits:Math.max(1,Number($("nCredits").value)||10),category:$("nCategory").value||"Otros",type:$("nType").value||"simple",durationMin:Math.max(1,Math.min(240,Number($("nDuration").value)||25)),stat:$("nStat").value,stat2:$("nStat2").value});$("nAct").value=$("nRew").value=$("nCriteria").value=""; save(); renderAll(); toast("Misión creada 🎯");
+};
+
+
+// Planificador IA: prompt reproducible y formato de importación estructurado.
+const PLANNER_PROMPT = `Actúa como planificador práctico de un día, no como agenda ni calendario. Convierte mis necesidades de hoy en una lista breve de misiones concretas, realistas y accionables. Prioriza: 1) obligaciones con fecha límite o consecuencias, 2) estudio/trabajo profundo, 3) salud y autocuidado básico, 4) hogar, 5) desarrollo personal y descanso. No inventes obligaciones; si falta un dato, crea una misión prudente y concreta. Evita duplicados, tareas vagas y listas imposibles: normalmente 4 a 8 misiones, ajustadas al tiempo y energía que indique. Cada misión debe tener título corto, criterio observable de finalización, categoría (Hogar, Salud, Trabajo, Estudio, Desarrollo personal u Otros), tipo (simple o timer), duraciónMin (solo para timer), maxDay (1 a 3, o más si lo pido), credits (6 a 25 según esfuerzo), stat (FUE, VIT, INT, VOL, AGI o DES), stat2 (opcional). Usa tipo timer para bloques de enfoque/lectura/estudio/trabajo con una duración sugerida; usa simple para tareas que se comprueban por resultado. Devuelve SOLO un array JSON válido, sin Markdown ni explicaciones, con esta estructura exacta: [{"act":"📚 Estudiar el tema X","criteria":"Estudiar concentrado durante el bloque y anotar 3 ideas","category":"Estudio","type":"timer","durationMin":25,"maxDay":2,"credits":12,"stat":"INT","stat2":"VOL"}]. Mis necesidades de hoy son: [ESCRIBIR AQUÍ].`;
+const promptBtn=$("copyPlannerPrompt"); if(promptBtn) promptBtn.onclick=async()=>{try{if(!navigator.clipboard||!navigator.clipboard.writeText)throw new Error("clipboard unavailable");await navigator.clipboard.writeText(PLANNER_PROMPT);toast("Prompt copiado. Pégalo en tu IA y completa tus necesidades.");}catch(_){openEditor("📋 Prompt para tu IA",[{k:"prompt",l:"Selecciona y copia este prompt",v:PLANNER_PROMPT}],()=>{});}};
+const clearPlannerBtn=$("clearPlanner"); if(clearPlannerBtn) clearPlannerBtn.onclick=()=>{ $("plannerImport").value=""; $("plannerImport").focus(); toast("Campo JSON limpio."); };
+const importBtn=$("importPlanner"); if(importBtn) importBtn.onclick=()=>{
+ try{
+  const raw=$("plannerImport").value.trim(); if(!raw) return toast("Pega primero el JSON de misiones");
+  const parsed=JSON.parse(raw); const arr=Array.isArray(parsed)?parsed:parsed.missions;
+  if(!Array.isArray(arr)||!arr.length) throw new Error("El JSON debe ser una lista de misiones.");
+  const stamp=Date.now();
+  const valid=arr.map((m,i)=>{if(!m||typeof m.act!=="string"||!m.act.trim())throw new Error(`La misión ${i+1} no tiene act válido.`);const cat=MISSION_CATEGORIES.includes(m.category)?m.category:"Otros";const st=STATS.some(x=>x.id===m.stat)?m.stat:"VOL";const st2=STATS.some(x=>x.id===m.stat2)?m.stat2:"";return {id:"ai_"+stamp+"_"+i,act:m.act.trim(),criteria:typeof m.criteria==="string"&&m.criteria.trim()?m.criteria.trim():m.act.trim(),rew:"",category:cat,type:m.type==="timer"?"timer":"simple",durationMin:Math.max(1,Math.min(240,Number(m.durationMin)||25)),maxDay:Math.max(1,Math.min(10,Number(m.maxDay)||1)),credits:Math.max(1,Math.min(100,Number(m.credits)||10)),stat:st,stat2:st2};});
+  // Reemplazo atómico: primero validar todo; solo entonces se descartan las misiones anteriores.
+  if(state.activeTimer) cancelActiveTimer(true);
+  state.pacts=valid; state.done={}; state.hist={}; $("plannerImport").value=""; missionCategoryFilter="Todas"; save();renderAll();toast(`¡Plan importado! Se reemplazaron las misiones por ${valid.length} nuevas. 🎯`);
+ }catch(err){toast("No se pudo importar: "+(err.message||"revisa el JSON"));}
 };
 
 // ============ Navegación ============
-const TABS = ["hoy", "pactos", "tienda", "tareas", "stats", "calma"];
+const TABS = ["hoy", "pactos", "tienda", "stats", "calma"];
 function goTab(name) {
 	TABS.forEach(n => { $("tab-" + n).classList.toggle("on", n === name); $("n-" + n).classList.toggle("on", n === name); });
 	const t = $("tab-" + name); t.classList.remove("enter"); void t.offsetWidth; t.classList.add("enter");
@@ -751,20 +841,20 @@ function renderMissionFilters() {
  $("missionFilters").innerHTML = categories.map(c=>`<button type="button" class="${missionCategoryFilter===c?"on":""}" data-mfilter="${esc(c)}">${c} <small>${c==="Todas"?state.pacts.length:state.pacts.filter(p=>categoryForMission(p)===c).length}</small></button>`).join("");
 }
 function renderPacts() {
-	const slots=state.pacts.reduce((n,p)=>n+(p.maxDay||1),0),done=Object.keys(state.done||{}).length,target=Math.max(1,Math.ceil(slots*.4));
- $("dayBar").style.width=Math.min(100,done/target*100)+"%"; $("dayTxt").textContent=`Meta diaria: ${Math.min(done,target)}/${target} acciones · ${Math.round(target/slots*100)}% del total. ${done>=target?"¡Meta alcanzada! Cada hito extra también cuenta.":"Al llegar a la meta, sigue sumando hitos extra."}`;
+	const slots=state.pacts.reduce((n,p)=>n+(Number(p.maxDay)||1),0),done=Object.values(state.done||{}).filter(v=>v&&v.date===today()).length,target=Math.max(1,Math.ceil(slots*.4));
+ $("dayBar").style.width=(slots?Math.min(100,done/target*100):0)+"%"; $("dayTxt").textContent=slots?`Meta diaria: ${Math.min(done,target)}/${target} acciones · ${Math.round(target/slots*100)}% del total. ${done>=target?"¡Meta alcanzada! Cada hito extra también cuenta.":"Al llegar a la meta, sigue sumando hitos extra."}`:"Aún no tienes misiones. Crea una o importa tu plan con IA para empezar.";
  const milestones=[Math.ceil(slots*.6),Math.ceil(slots*.8),slots]; state.dayMilestones=state.dayMilestones||{};
- milestones.forEach((n,i)=>{const k=today()+"_"+i;if(done>=n&&!state.dayMilestones[k]){state.dayMilestones[k]=true;addXP("VOL",[10,15,25][i]);toast(["✨ Hito extra +10 XP","🔥 Gran constancia +15 XP","🏆 Todas las acciones +25 XP"][i]);save();}});
+ if(slots>0) milestones.forEach((n,i)=>{const k=today()+"_"+i;if(done>=n&&!state.dayMilestones[k]){state.dayMilestones[k]=true;addXP("VOL",[10,15,25][i]);toast(["✨ Hito extra +10 XP","🔥 Gran constancia +15 XP","🏆 Todas las acciones +25 XP"][i]);save();}});
  renderMissionFilters();
  $("pacts").innerHTML=state.pacts.filter(p=>missionCategoryFilter==="Todas"||categoryForMission(p)===missionCategoryFilter).map(p=>{const used=pactDoneCount(p.id),max=p.maxDay||1,ci=Math.max(0,STATS.findIndex(s=>s.id===p.stat));
- const foot=used<max?`<button class="big" data-do="${p.id}" data-f="1">✓ Cumplida · +${p.credits||10} ◈</button><button class="alt" data-do="${p.id}" data-f="0">Versión mínima (½ XP)</button>`:"<small>✅ Límite diario completado</small>";
- return `<div class="tile pact ${used>=max?"claimed":"locked"}" style="--c:${COLORS[ci]}"><span class="badge">${used>=max?"✅":"🎯"}</span><small>MISIÓN · ${esc(categoryForMission(p).toUpperCase())} · ${used}/${max} HOY</small><b>${esc(p.act)}</b><small style="letter-spacing:0">${esc(p.criteria||p.act)}</small><div class="rws"><span class="rw">+${p.credits||10} ◈</span><span class="rw">${sIcon(p.stat)} ${p.stat} XP</span></div>${foot}</div>`;
+ const running=state.activeTimer&&String(state.activeTimer.missionId)===String(p.id); const foot=used<max?(p.type==="timer"?`<button class="big" data-do="${p.id}" data-f="1">${running?"⏱️ Cronómetro en curso":"▶ Iniciar · "+(p.durationMin||25)+" min"}</button>`:`<button class="big" data-do="${p.id}" data-f="1">✓ Cumplida · +${Number(p.credits)||10} ◈</button><button class="alt" data-do="${p.id}" data-f="0">Versión mínima (½ XP)</button>`):"<small>✅ Límite diario completado</small>";
+ return `<div class="tile pact ${used>=max?"claimed":"locked"}" style="--c:${COLORS[ci]}"><span class="badge">${used>=max?"✅":"🎯"}</span><small>${p.type==="timer"?"⏱️ CRONÓMETRO":"🎯 MISIÓN"} · ${esc(categoryForMission(p).toUpperCase())} · ${used}/${max} HOY</small><b>${esc(p.act)}</b><small style="letter-spacing:0">${esc(p.criteria||p.act)}</small><div class="rws"><span class="rw">+${Number(p.credits)||10} ◈</span><span class="rw">${sIcon(p.stat)} ${p.stat} XP</span>${p.type==="timer"?`<span class="rw">⏱️ ${p.durationMin||25} min</span>`:""}</div>${foot}</div>`;
  }).join("");
 }
 function renderList() {
 	const opts = s => STATS.map(x => `<option value="${x.id}" ${x.id === s ? "selected" : ""}>${x.icon} ${x.id}</option>`).join("");
 	if (!$("nStat").innerHTML) { $("nStat").innerHTML = opts("VOL"); $("nStat2").innerHTML = '<option value="">— sin secundario —</option>' + opts(""); }
-	$("plist").innerHTML = state.pacts.map(p => `<div class="card"><div class="sechead"><span>${esc(p.act)}<br><small>${esc(p.criteria||p.act)} · máx. ${p.maxDay||1}/día · +${p.credits||10} ◈<br>${sIcon(p.stat)} ${p.stat}${p.stat2 ? " + " + sIcon(p.stat2) + " " + p.stat2 : ""}</small></span>
+	$("plist").innerHTML = state.pacts.map(p => `<div class="card"><div class="sechead"><span>${esc(p.act)}<br><small>${esc(p.criteria||p.act)} · ${p.type==="timer"?"Cronómetro "+(p.durationMin||25)+" min":"Simple"} · máx. ${p.maxDay||1}/día · +${Number(p.credits)||10} ◈<br>${sIcon(p.stat)} ${p.stat}${p.stat2 ? " + " + sIcon(p.stat2) + " " + p.stat2 : ""}</small></span>
 		<span><button data-ed="m" data-id="${p.id}">✏️</button> <button data-del="${p.id}">🗑️</button></span></div></div>`).join("");
 }
 function showStat(id) {
@@ -816,20 +906,18 @@ document.addEventListener("click", e => {
 function renderShop(){
  $("creditBalance").textContent=`${state.credits||0} ◈`;
  const todayP=state.purchases.filter(p=>p.date===today());
- $("shopItems").innerHTML=state.rewards.map(r=>{const n=todayP.filter(p=>p.rewardId===r.id).length,disabled=(state.credits||0)<r.price||n>=r.maxDay;return `<div class="tile pact"><span class="badge">${esc(r.icon||"🎁")}</span><small>RECOMPENSA · ${n}/${r.maxDay} HOY</small><b>${esc(r.name)}</b><div class="rws"><span class="rw">${r.price} ◈</span><span class="rw">Caduca en ${Math.min(24,r.expiry||24)} h</span></div><button class="big" data-buy="${esc(r.id)}" ${disabled?"disabled":""}>${n>=r.maxDay?"Límite diario":(state.credits||0)<r.price?"Faltan créditos":"Comprar"}</button><button class="alt" data-re-edit="${esc(r.id)}" style="margin-top:8px">✏️ Editar recompensa</button></div>`}).join("");
+ $("shopItems").innerHTML=state.rewards.map(r=>{const n=todayP.filter(p=>p.rewardId===r.id).length,disabled=(state.credits||0)<r.price||n>=r.maxDay;return `<div class="tile pact"><span class="badge">${esc(r.icon||"🎁")}</span><small>RECOMPENSA · ${n}/${r.maxDay} HOY</small><b>${esc(r.name)}</b><div class="rws"><span class="rw">${r.price} ◈</span><span class="rw">Caduca en ${Math.min(24,r.expiry||24)} h</span></div><button class="big" data-buy="${esc(r.id)}" ${disabled?"disabled":""}>${n>=r.maxDay?"Límite diario":(state.credits||0)<r.price?"Faltan créditos":"Comprar"}</button><div class="btns" style="margin-top:8px"><button class="alt" data-re-edit="${esc(r.id)}">✏️ Editar</button><button class="alt" data-re-delete="${esc(r.id)}">🗑️ Borrar</button></div></div>`}).join("");
  $("inventory").innerHTML=state.purchases.filter(p=>!p.used&&p.expires>Date.now()).map(p=>`<div class="mrow"><div class="grow"><b>${esc(p.icon)} ${esc(p.name)}</b><br><small>Vence ${new Date(p.expires).toLocaleString("es-PE",{dateStyle:"short",timeStyle:"short"})}</small></div><button data-use="${p.id}">Usar</button></div>`).join("")||"<small>No tienes recompensas pendientes. Las compras vencidas dejan de aparecer aquí.</small>";
 }
 document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
- if(b.dataset.buy){const r=state.rewards.find(x=>String(x.id)===b.dataset.buy);if(!r)return;const n=state.purchases.filter(p=>p.rewardId===r.id&&p.date===today()).length;if(state.credits<r.price||n>=r.maxDay)return toast("No puedes comprar esta recompensa");state.credits-=r.price;state.purchases.push({id:Date.now(),rewardId:r.id,name:r.name,icon:r.icon,date:today(),expires:Date.now()+Math.min(24,Math.max(1,r.expiry||24))*3600000,used:false});save();renderAll();toast("¡Recompensa comprada! 🎁");}
- if(b.dataset.use){const p=state.purchases.find(x=>x.id==b.dataset.use);if(p&&!p.used&&p.expires>Date.now()){p.used=true;save();renderAll();toast("¡A disfrutar tu recompensa! ✨");}}
+ if(b.dataset.buy){const r=state.rewards.find(x=>String(x.id)===b.dataset.buy);if(!r)return;const n=state.purchases.filter(p=>p.rewardId===r.id&&p.date===today()).length;if((Number(state.credits)||0)<(Number(r.price)||1)||n>=Math.max(1,Number(r.maxDay)||1))return toast("No puedes comprar esta recompensa");state.credits=Math.max(0,Number(state.credits)||0)-Math.max(1,Number(r.price)||1);state.purchases.push({id:Date.now(),rewardId:r.id,name:r.name,icon:r.icon,date:today(),expires:Date.now()+Math.min(24,Math.max(1,r.expiry||24))*3600000,used:false});save();renderAll();play([523,659,784],.09);burst(lastPt.x,lastPt.y,28,[r.icon||"🎁","✨","🪙"]);pulse("#creditBalance");toast("¡Canje desbloqueado! Tu recompensa ya está en el inventario 🎁");}
+ if(b.dataset.use){const p=state.purchases.find(x=>x.id==b.dataset.use);if(p&&!p.used&&p.expires>Date.now()){p.used=true;save();renderAll();play([659,784,1047],.1);burst(lastPt.x,lastPt.y,36,[p.icon||"🎁","✨","🎉"]);kick();toast("¡Recompensa activada! Disfruta el premio, te lo ganaste ✨");}}
 });
 const rewardAddButton = $("rAdd");
 if (rewardAddButton) rewardAddButton.onclick=()=>{
  const name=$("rName").value.trim(); if(!name)return toast("Escribe un nombre");
  const data={name,icon:$("rIcon").value.trim()||"🎁",price:Math.max(1,+$("rPrice").value||1),maxDay:Math.max(1,Math.min(10,+$("rMax").value||1)),expiry:Math.max(1,Math.min(24,+$("rExpiry").value||24))};
- const editing=rewardAddButton.dataset.editReward;
- if(editing){const r=state.rewards.find(x=>String(x.id)===String(editing));if(r)Object.assign(r,data);delete rewardAddButton.dataset.editReward;rewardAddButton.textContent="Crear recompensa";toast("Recompensa actualizada");}
- else {state.rewards.push({id:"custom_"+Date.now(),...data});toast("Recompensa creada");}
+ state.rewards.push({id:"custom_"+Date.now(),...data});toast("Recompensa creada");
  $("rName").value="";$("rIcon").value="🎁";$("rPrice").value=20;$("rMax").value=1;$("rExpiry").value=24;save();renderAll();
 };
 
@@ -855,8 +943,8 @@ document.addEventListener("click", e => {
 	const M = state.money, g = b.dataset.g, id = +b.dataset.id;
 	if (b.dataset.ed === "m") {
 		const p = state.pacts.find(x => x.id == b.dataset.id), so = STATS.map(s => [s.id, s.icon + " " + s.id]);
-		return openEditor("✏️ Editar misión", [{ k: "act", l: "Misión (título corto)", v: p.act }, { k: "criteria", l: "Criterio de cumplimiento", v: p.criteria||p.act }, { k: "maxDay", l: "Veces máximas al día", t:"number", v:p.maxDay||1 }, { k: "credits", l: "Créditos ganados", t:"number", v:p.credits||10 },
-			{ k: "stat", l: "Atributo principal (100% del XP)", v: p.stat, o: so }, { k: "stat2", l: "Atributo secundario (50%)", v: p.stat2 || "", o: [["", "— ninguno —"], ...so] }], v => Object.assign(p, v));
+		return openEditor("✏️ Editar misión", [{ k: "act", l: "Misión (título corto)", v: p.act }, { k: "criteria", l: "Criterio de cumplimiento", v: p.criteria||p.act }, { k: "category", l: "Categoría", v:p.category||"Otros", o:MISSION_CATEGORIES.map(c=>[c,c]) }, { k: "type", l: "Tipo", v:p.type||"simple", o:[["simple","Simple · completar y cobrar"],["timer","Cronómetro · por tiempo"]] }, { k: "durationMin", l: "Duración en minutos (si es cronómetro)", t:"number", v:p.durationMin||25 }, { k: "maxDay", l: "Veces máximas al día", t:"number", v:p.maxDay||1 }, { k: "credits", l: "Créditos ganados", t:"number", v:p.credits||10 },
+			{ k: "stat", l: "Atributo principal (100% del XP)", v: p.stat, o: so }, { k: "stat2", l: "Atributo secundario (50%)", v: p.stat2 || "", o: [["", "— ninguno —"], ...so] }], v => {Object.assign(p,v);p.maxDay=Math.max(1,Math.min(10,Number(v.maxDay)||1));p.credits=Math.max(1,Number(v.credits)||10);p.durationMin=Math.max(1,Math.min(240,Number(v.durationMin)||25));p.category=MISSION_CATEGORIES.includes(v.category)?v.category:"Otros";});
 	}
 	if (g === "in" || g === "out") {
 		const inc = g === "in";
@@ -1074,11 +1162,11 @@ function boot() {
 	}, 380);
 	B.onclick = () => { clearInterval(iv); B.hidden = true; kick(); };
 }
-function renderAll() { renderHead(); renderPacts(); renderShop(); renderList(); renderStats(); renderTasks(); renderGold(); $("calma").innerHTML = panel("pub"); if (secOpen) $("secBody").innerHTML = panel("sec"); }
+function renderAll() { renderHead(); renderPacts(); renderShop(); renderList(); renderStats(); renderGold(); updateTimerUI(); $("calma").innerHTML = panel("pub"); if (secOpen) $("secBody").innerHTML = panel("sec"); }
 // Si la app queda abierta pasada la medianoche, reinicia las misiones del día
 function checkNewDay() {
 	if (state.day === today()) return;
-	state.day = today(); state.done = {}; state.crits = 0; save(); renderAll();
+	state.day = today(); state.done = {}; state.crits = 0; state.activeTimer = null; if(timerInterval){clearInterval(timerInterval);timerInterval=null;} save(); renderAll();
 }
 setInterval(checkNewDay, 30000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) checkNewDay(); });
